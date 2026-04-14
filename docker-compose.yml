@@ -1,0 +1,18 @@
+version: "3.8" #versao do compose
+
+services: #define os containers
+  backend: #define o nome do serviço, nome do host na rede interna do Dodcker
+    build: ./backend #usa o dockerfile da pasta backend
+    container_name: nest-backend
+    ports:
+      - "3000:3000" #porta do host e container
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: next-frontend
+    ports:
+      - "3001:3001"
+    depends_on: #garante que o backend suba antes
+      - backend
+    restart: always
