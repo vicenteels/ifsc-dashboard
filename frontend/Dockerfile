@@ -1,6 +1,6 @@
 #igual o backend, mas muda o execução
 # Etapa 1: build
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN npm run build
 
 
 # Etapa 2: produção
-FROM node:20-alpine
+FROM node:20
 
 WORKDIR /app
 
