@@ -12,7 +12,7 @@ services: #define os containers
     build: ./frontend
     container_name: next-frontend
     ports:
-      - "3001:3001"
+      - "3001:3000"
     depends_on: #garante que o backend suba antes
       - backend
     restart: always
