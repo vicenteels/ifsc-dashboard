@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
   const router = useRouter()
 
   async function handleLogin() {
@@ -34,6 +35,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('moodle_token', dados.token)
+      localStorage.setItem('darkMode', darkMode ? 'true' : 'false')
       router.push('/dashboard')
 
     } catch {
@@ -43,70 +45,120 @@ export default function LoginPage() {
     }
   }
 
+  const bgColor = darkMode ? '#0f1117' : '#f5f5f5'
+  const cardBg = darkMode ? '#1a1d27' : '#ffffff'
+  const textColor = darkMode ? '#e2e2e2' : '#1a1a1a'
+  const textMuted = darkMode ? '#888' : '#666'
+  const borderColor = darkMode ? '#2a2d3a' : '#e0e0e0'
+  const inputBg = darkMode ? '#0f1117' : '#f0f0f0'
+
   return (
     <main style={{
       minHeight: '100vh',
-      background: '#0f1117',
+      background: bgColor,
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'var(--font-sans)',
+      transition: 'background 0.3s',
     }}>
+      {/* Header com toggle dark/light */}
       <div style={{
-        background: '#1a1d27',
+        position: 'absolute',
+        top: '16px',
+        right: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+      }}>
+        <span style={{ fontSize: '12px', color: textMuted }}>
+          {darkMode ? '🌙' : '☀️'}
+        </span>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          style={{
+            width: '44px',
+            height: '24px',
+            borderRadius: '12px',
+            background: darkMode ? '#1f4d1f' : '#ffd54f',
+            border: `0.5px solid ${borderColor}`,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '2px',
+            transition: 'all 0.3s',
+          }}
+        >
+          <div style={{
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            background: darkMode ? '#2d7a2d' : '#fbc02d',
+            transition: 'transform 0.3s',
+            transform: darkMode ? 'translateX(0)' : 'translateX(20px)',
+          }} />
+        </button>
+      </div>
+
+      <div style={{
+        background: cardBg,
         borderRadius: '16px',
         padding: '40px 36px',
         width: '100%',
         maxWidth: '380px',
-        border: '0.5px solid #2a2d3a',
+        border: `0.5px solid ${borderColor}`,
+        boxShadow: darkMode ? '0 4px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
+        transition: 'all 0.3s',
       }}>
 
-        {/* Logo IFSC */}
+        {/* Logo IFScore */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
-          {/* Grade de quadrados do logo IFSC */}
+          {/* Grid logo IFSC */}
           <div style={{ position: 'relative', width: '64px', height: '64px', marginBottom: '12px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px' }}>
-              {/* Linha 1 */}
-              <div style={{ width: '12px', height: '12px', background: '#transparent'}} />
+              <div style={{ width: '12px', height: '12px', background: 'transparent' }} />
               <div style={{ width: '12px', height: '12px', background: '#cc2222', borderRadius: '50%' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
-              {/* Linha 2 */}
-              <div style={{ width: '12px', height: '12px', background: '#transparent'}} />
+
+              <div style={{ width: '12px', height: '12px', background: 'transparent' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
-              <div style={{ width: '12px', height: '12px', background: '#transparent'}} />
-              {/* Linha 3 */}
-              <div style={{ width: '12px', height: '12px', background: '#transparent' }} />
+              <div style={{ width: '12px', height: '12px', background: 'transparent' }} />
+
+              <div style={{ width: '12px', height: '12px', background: 'transparent' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
-              {/* Linha 4 */}
-              <div style={{ width: '12px', height: '12px', background: '#transparent' }} />
+
+              <div style={{ width: '12px', height: '12px', background: 'transparent' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
               <div style={{ width: '12px', height: '12px', background: '#2d7a2d', borderRadius: '1px' }} />
-              <div style={{ width: '12px', height: '12px', background: '#transparent'}} />
+              <div style={{ width: '12px', height: '12px', background: 'transparent' }} />
             </div>
           </div>
 
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '15px', fontWeight: 500, color: '#e2e2e2', letterSpacing: '0.08em' }}>
-              INSTITUTO FEDERAL
+          {/* Texto IFScore */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <div style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '4px' }}>
+              <span style={{ color: '#2d7a2d' }}>IFSc</span>
+              <span style={{ color: '#cc2222' }}>ore</span>
             </div>
-            <div style={{ fontSize: '11px', color: '#888', letterSpacing: '0.05em' }}>
-              Santa Catarina
+            <div style={{ fontSize: '11px', color: textMuted, letterSpacing: '0.04em' }}>
+              Dashboard de Atividades
             </div>
           </div>
 
-          <div style={{ marginTop: '16px', width: '100%', borderTop: '0.5px solid #2a2d3a', paddingTop: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', color: '#888' }}>Acesse com suas credenciais do Moodle</div>
+          <div style={{ marginTop: '12px', width: '100%', borderTop: `0.5px solid ${borderColor}`, paddingTop: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', color: textMuted }}>Acesse com suas credenciais do Moodle</div>
           </div>
         </div>
 
         {/* Campos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div>
-            <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', color: textMuted, display: 'block', marginBottom: '6px' }}>
               Usuário
             </label>
             <input
@@ -117,20 +169,21 @@ export default function LoginPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               style={{
                 width: '100%',
-                background: '#0f1117',
-                border: '0.5px solid #2a2d3a',
+                background: inputBg,
+                border: `0.5px solid ${borderColor}`,
                 borderRadius: '8px',
                 padding: '10px 14px',
                 fontSize: '13px',
-                color: '#e2e2e2',
+                color: textColor,
                 outline: 'none',
                 boxSizing: 'border-box',
+                transition: 'all 0.3s',
               }}
             />
           </div>
 
           <div>
-            <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', color: textMuted, display: 'block', marginBottom: '6px' }}>
               Senha
             </label>
             <input
@@ -141,14 +194,15 @@ export default function LoginPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               style={{
                 width: '100%',
-                background: '#0f1117',
-                border: '0.5px solid #2a2d3a',
+                background: inputBg,
+                border: `0.5px solid ${borderColor}`,
                 borderRadius: '8px',
                 padding: '10px 14px',
                 fontSize: '13px',
-                color: '#e2e2e2',
+                color: textColor,
                 outline: 'none',
                 boxSizing: 'border-box',
+                transition: 'all 0.3s',
               }}
             />
           </div>
@@ -165,19 +219,19 @@ export default function LoginPage() {
               width: '100%',
               padding: '11px',
               borderRadius: '8px',
-              background: carregando ? '#1f4d1f' : '#2d7a2d',
-              color: carregando ? '#888' : '#e2e2e2',
+              background: carregando ? (darkMode ? '#1f4d1f' : '#e0e0e0') : '#2d7a2d',
+              color: carregando ? (darkMode ? '#888' : '#999') : '#ffffff',
               fontSize: '14px',
               fontWeight: 500,
               border: 'none',
               cursor: carregando ? 'not-allowed' : 'pointer',
-              transition: 'background 0.15s',
+              transition: 'all 0.3s',
             }}
           >
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
 
-          <p style={{ textAlign: 'center', fontSize: '12px', color: '#555', margin: '4px 0 0' }}>
+          <p style={{ textAlign: 'center', fontSize: '12px', color: textMuted, margin: '4px 0 0' }}>
             Use as mesmas credenciais do{' '}
             <a
               href="https://moodle.ifsc.edu.br"

@@ -3,10 +3,10 @@ import { MoodleService } from './moodle.service';
 
 @Controller('moodle')
 export class MoodleController {
-    constructor(private readonly moodleService: MoodleService){}
+    constructor(private readonly moodleService: MoodleService) { }
 
     @Post('login')
-    async login(@Body() body: { username:string; password: string }) {
+    async login(@Body() body: { username: string; password: string }) {
         const token = await this.moodleService.getToken(body.username, body.password);
         return { token };
     }
@@ -19,7 +19,17 @@ export class MoodleController {
     }
 
     @Get('usuario')
-    async getUsuario(@Query('token') token: string){
+    async getUsuario(@Query('token') token: string) {
         return this.moodleService.getUsuario(token);
+    }
+
+    @Get('questionarios')
+    async getQuestionarios(@Query('token') token: string, @Query('userid') userid: string = '7230') {
+        return this.moodleService.getQuestionarios(token, parseInt(userid));
+    }
+
+    @Get('cursos')
+    async getCursos(@Query('token') token: string) {
+        return this.moodleService.getCursos(token);
     }
 }

@@ -52,31 +52,40 @@ export class MoodleService {
                 link: `https://moodle.ifsc.edu.br/mod/assign/view.php?id=${tarefa.cmid}`,
                 nome: tarefa.name,
                 disciplina: curso.fullname.trim(),
+                tipo: 'tarefa',
                 prazo: tarefa.duedate
                     ? new Date(tarefa.duedate * 1000).toLocaleString('pt-BR')
                     : 'Sem prazo',
                 prazoTimestamp: tarefa.duedate,
                 criadaEm: new Date(tarefa.timemodified * 1000).toLocaleString('pt-BR'),
                 criadaEmTimestamp: tarefa.timemodified,
+                dataEnvio: null, // Será preenchido se enviada
+                dataEnvioTimestamp: null,
             }))
         );
 
         const tarefasFiltradas = dataInicio
             ? todasTarefas.filter((tarefa: any) => {
+                // Cria a data interpretando como horário local (Brasil)
                 const [ano, mes, dia] = dataInicio.split('-').map(Number);
-                const dataLocal = new Date(ano, mes - 1, dia, 0, 0, 0);
+                const dataLocal = new Date(ano, mes - 1, dia, 23, 59, 59); // Fim do dia
                 const timestampFiltro = dataLocal.getTime() / 1000;
-                return tarefa.criadaEmTimestamp >= timestampFiltro;
+                // Filtra tarefas com prazo até ou antes da data selecionada
+                return tarefa.prazoTimestamp <= timestampFiltro;
             })
             : todasTarefas;
 
         //Passo 3: para cada tarefa, irá buscar o status do envio
-        const tarefasComStatus = await Promise.all( //usado para executar a promise para todas as tarefas encontradas de forma simultanea
+        const tarefasComStatus = await Promise.all(
             tarefasFiltradas.map(async (tarefa: any) => {
-                const status = await this.getStatusTarefa(token, tarefa.id);
+                const resultado = await this.getStatusTarefa(token, tarefa.id);
                 return {
-                    ...tarefa, //spread ele faz o campo status ser adicionado a tarefa sem precisar reescrever os campos
-                    status,
+                    ...tarefa,
+                    status: resultado.status,
+                    dataEnvioTimestamp: resultado.timemodified ? Math.floor(resultado.timemodified / 1000) : null,
+                    dataEnvio: resultado.timemodified
+                        ? new Date(resultado.timemodified).toLocaleString('pt-BR')
+                        : null,
                 };
             })
         );
@@ -91,7 +100,7 @@ export class MoodleService {
         return { pendentes, enviadas };
     }
 
-    async getStatusTarefa(token: string, assignid: number): Promise<string> {
+    async getStatusTarefa(token: string, assignid: number): Promise<{ status: string; timemodified: number | null }> {
         try {
             const response = await firstValueFrom(
                 this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
@@ -103,20 +112,13 @@ export class MoodleService {
                     },
                 })
             );
-
             const submission = response.data?.lastattempt?.submission;
+            const status = !submission || submission.status === 'new' ? 'pendente' : 'enviada';
+            const timemodified = submission?.timemodified ? submission.timemodified * 1000 : null;
 
-            if (!submission || submission.status === 'new') {
-                return 'pendente';
-            }
-
-            if (submission.status === 'submitted') {
-                return 'enviada';
-            }
-
-            return 'pendente';
+            return { status, timemodified };
         } catch {
-            return 'pendente';
+            return { status: 'pendente', timemodified: null };
         }
     }
 
@@ -139,6 +141,102 @@ export class MoodleService {
             primeiroNome,
             userid: response.data.userid,
         };
+    }
+
+    async getQuestionarios(token: string, userid: number) {
+        const response = await firstValueFrom(
+            this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
+                params: {
+                    wstoken: token,
+                    wsfunction: 'mod_quiz_get_quizzes_by_courses',
+                    moodlewsrestformat: 'json',
+                },
+            })
+        );
+
+        const quizzes = response.data.quizzes || [];
+        const questionarios: any[] = [];
+
+        for (const quiz of quizzes) {
+            try {
+                // Busca as tentativas do usuário
+                const attemptsResponse = await firstValueFrom(
+                    this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
+                        params: {
+                            wstoken: token,
+                            wsfunction: 'mod_quiz_get_user_attempts',
+                            quizid: quiz.id,
+                            userid: userid,
+                            moodlewsrestformat: 'json',
+                        },
+                    })
+                );
+
+                const attempts = attemptsResponse.data.attempts || [];
+                const respondido = attempts.length > 0;
+
+                let nota = 0;
+                if (respondido) {
+                    // Busca a melhor nota
+                    const gradeResponse = await firstValueFrom(
+                        this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
+                            params: {
+                                wstoken: token,
+                                wsfunction: 'mod_quiz_get_user_best_grade',
+                                quizid: quiz.id,
+                                moodlewsrestformat: 'json',
+                            },
+                        })
+                    );
+                    nota = gradeResponse.data.grade || 0;
+                }
+
+                questionarios.push({
+                    id: quiz.id,
+                    cmid: quiz.coursemodule,
+                    link: `https://moodle.ifsc.edu.br/mod/quiz/view.php?id=${quiz.coursemodule}`,
+                    nome: quiz.name,
+                    disciplina: `${quiz.course}`, // Mantém o course ID para depois relacionar com o nome
+                    courseId: quiz.course,
+                    tipo: 'questionario',
+                    notaMaxima: quiz.grade,
+                    totalQuestoes: quiz.sumgrades,
+                    tentativas: quiz.attempts || 0,
+                    respondido: respondido,
+                    nota: respondido ? nota : null,
+                    timeopen: quiz.timeopen,
+                    timeclose: quiz.timeclose,
+                });
+            } catch (error) {
+                // Se falhar em um questionário, continua com os outros
+                console.error(`Erro ao buscar detalhes do questionário ${quiz.id}:`, error);
+            }
+        }
+
+        return questionarios;
+    }
+
+    async getCursos(token: string): Promise<Record<string, string>> {
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
+                    params: {
+                        wstoken: token,
+                        wsfunction: 'core_enrol_get_users_courses',
+                        userid: '7230',
+                        moodlewsrestformat: 'json',
+                    },
+                })
+            );
+
+            const cursos: Record<string, string> = {};
+            (response.data || []).forEach((curso: any) => {
+                cursos[curso.id] = curso.fullname;
+            });
+            return cursos;
+        } catch {
+            return {};
+        }
     }
 
 }
