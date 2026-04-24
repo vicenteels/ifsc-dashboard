@@ -158,6 +158,9 @@ export class MoodleService {
         const questionarios: any[] = [];
 
         for (const quiz of quizzes) {
+            let respondido = false;
+            let nota = null;
+
             try {
                 // Busca as tentativas do usuário
                 const attemptsResponse = await firstValueFrom(
@@ -173,44 +176,55 @@ export class MoodleService {
                 );
 
                 const attempts = attemptsResponse.data.attempts || [];
-                const respondido = attempts.length > 0;
+                respondido = attempts.length > 0;
 
-                let nota = 0;
+                // Se respondido, busca a nota
                 if (respondido) {
-                    // Busca a melhor nota
-                    const gradeResponse = await firstValueFrom(
-                        this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
-                            params: {
-                                wstoken: token,
-                                wsfunction: 'mod_quiz_get_user_best_grade',
-                                quizid: quiz.id,
-                                moodlewsrestformat: 'json',
-                            },
-                        })
-                    );
-                    nota = gradeResponse.data.grade || 0;
-                }
+                    try {
+                        const gradeResponse = await firstValueFrom(
+                            this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
+                                params: {
+                                    wstoken: token,
+                                    wsfunction: 'mod_quiz_get_user_best_grade',
+                                    quizid: quiz.id,
+                                    userid: userid,
+                                    moodlewsrestformat: 'json',
+                                },
+                            })
+                        );
 
-                questionarios.push({
-                    id: quiz.id,
-                    cmid: quiz.coursemodule,
-                    link: `https://moodle.ifsc.edu.br/mod/quiz/view.php?id=${quiz.coursemodule}`,
-                    nome: quiz.name,
-                    disciplina: `${quiz.course}`, // Mantém o course ID para depois relacionar com o nome
-                    courseId: quiz.course,
-                    tipo: 'questionario',
-                    notaMaxima: quiz.grade,
-                    totalQuestoes: quiz.sumgrades,
-                    tentativas: quiz.attempts || 0,
-                    respondido: respondido,
-                    nota: respondido ? nota : null,
-                    timeopen: quiz.timeopen,
-                    timeclose: quiz.timeclose,
-                });
+                        // Verifica se tem a chave 'grade' e se é um número válido
+                        if (gradeResponse.data && typeof gradeResponse.data.grade === 'number') {
+                            nota = gradeResponse.data.grade;
+                        } else if (gradeResponse.data && gradeResponse.data.hasgrade) {
+                            nota = gradeResponse.data.grade;
+                        }
+                    } catch (gradeError) {
+                        console.error(`Erro ao buscar nota do quiz ${quiz.id}:`, gradeError);
+                        // Continua sem nota se falhar
+                    }
+                }
             } catch (error) {
-                // Se falhar em um questionário, continua com os outros
-                console.error(`Erro ao buscar detalhes do questionário ${quiz.id}:`, error);
+                console.error(`Erro ao buscar tentativas do quiz ${quiz.id}:`, error);
+                respondido = false;
             }
+
+            questionarios.push({
+                id: quiz.id,
+                cmid: quiz.coursemodule,
+                link: `https://moodle.ifsc.edu.br/mod/quiz/view.php?id=${quiz.coursemodule}`,
+                nome: quiz.name,
+                disciplina: `${quiz.course}`,
+                courseId: quiz.course,
+                tipo: 'questionario',
+                notaMaxima: quiz.grade,
+                totalQuestoes: quiz.sumgrades,
+                tentativas: quiz.attempts || 0,
+                respondido: respondido,
+                nota: nota,
+                timeopen: quiz.timeopen,
+                timeclose: quiz.timeclose,
+            });
         }
 
         return questionarios;

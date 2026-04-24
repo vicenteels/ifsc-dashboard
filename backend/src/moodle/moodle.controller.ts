@@ -24,8 +24,12 @@ export class MoodleController {
     }
 
     @Get('questionarios')
-    async getQuestionarios(@Query('token') token: string, @Query('userid') userid: string = '7230') {
-        return this.moodleService.getQuestionarios(token, parseInt(userid));
+    async getQuestionarios(@Query('token') token: string, @Query('userid') userid: string) {
+        const userIdNum = parseInt(userid);
+        if (isNaN(userIdNum)) {
+            throw new Error('userid inválido');
+        }
+        return this.moodleService.getQuestionarios(token, userIdNum);
     }
 
     @Get('cursos')

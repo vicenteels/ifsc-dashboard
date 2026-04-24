@@ -46,7 +46,7 @@ function getStatusTarefa(tarefa: Tarefa): StatusTarefa {
   const agora = Date.now() / 1000
   const vencida = tarefa.prazoTimestamp < agora
   const enviadaAosTempo = tarefa.dataEnvioTimestamp && tarefa.dataEnvioTimestamp <= tarefa.prazoTimestamp
-  
+
   if (tarefa.status === 'enviada') {
     return enviadaAosTempo ? 'enviada_prazo' : 'enviada_atraso'
   } else {
@@ -169,12 +169,12 @@ export default function DashboardPage() {
     }
   }
 
-  async function buscarQuestionarios() {
+  async function buscarQuestionarios(userid: string) {
     const token = localStorage.getItem('moodle_token')
     if (!token) return
 
     try {
-      const resposta = await fetch(`http://localhost:3000/moodle/questionarios?token=${token}&userid=7230`)
+      const resposta = await fetch(`http://localhost:3000/moodle/questionarios?token=${token}&userid=${userid}`)
       const dados = await resposta.json()
       if (!resposta.ok) {
         setErro('Erro ao buscar questionários.')
@@ -196,10 +196,22 @@ export default function DashboardPage() {
     if (savedDarkMode !== null) {
       setDarkMode(savedDarkMode === 'true')
     }
+
+    // Busca usuário primeiro para pegar o userid
     buscarUsuario(token)
     buscarCursos(token)
     buscarTarefas()
-    buscarQuestionarios()
+
+    // Busca questionários com o userid correto
+    fetch(`http://localhost:3000/moodle/usuario?token=${token}`)
+      .then(r => r.json())
+      .then(dados => {
+        buscarQuestionarios(dados.userid.toString())
+      })
+      .catch(() => {
+        // Se falhar, tenta com userid padrão
+      })
+
     setCarregando(false)
   }, [])
 
