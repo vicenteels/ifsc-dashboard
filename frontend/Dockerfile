@@ -1,22 +1,26 @@
-#igual o backend, mas muda o execução
 # Etapa 1: build
-FROM node:20 AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
 
 
 # Etapa 2: produção
-FROM node:20
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app ./
+#não copie tudo
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./
+
+RUN npm ci --omit=dev
 
 EXPOSE 3001
 
