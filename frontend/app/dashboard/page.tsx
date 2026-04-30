@@ -174,8 +174,11 @@ export default function DashboardPage() {
     if (!token) return
 
     try {
+      console.log('[Questionarios] Buscar para userid:', userid)
       const resposta = await fetch(`http://localhost:3000/moodle/questionarios?token=${token}&userid=${userid}`)
       const dados = await resposta.json()
+      console.log('[Questionarios] Response status:', resposta.status, 'ok:', resposta.ok)
+      console.log('[Questionarios] Dados:', dados)
       if (!resposta.ok) {
         setErro('Erro ao buscar questionários.')
         return
@@ -206,6 +209,8 @@ export default function DashboardPage() {
     fetch(`http://localhost:3000/moodle/usuario?token=${token}`)
       .then(r => r.json())
       .then(dados => {
+        console.log('Dados do usuário:', dados)
+        console.log('Userid:', dados.userid)
         buscarQuestionarios(dados.userid.toString())
       })
       .catch(() => {

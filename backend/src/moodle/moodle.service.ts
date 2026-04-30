@@ -5,6 +5,13 @@ import { firstValueFrom } from 'rxjs'; //para converter a resposta do Axios para
 @Injectable() //esse injectable diz que essa classe pode ser injetada em outras classes. Sem isso o Nest não saberia que essa classe existe para ser usada automaticamente
 //é isso que permite eu colocar no controller constructor(private readonly moodleService: MoodleService){}
 export class MoodleService {
+    private formatHttpError(error: any) {
+        const status = error?.response?.status;
+        const data = error?.response?.data;
+        const message = error?.message;
+        return { status, message, data };
+    }
+
     private readonly baseUrl = 'https://moodle.ifsc.edu.br';
 
     constructor(private readonly httpService: HttpService) { } //adiciona o httpService ao construtor da classe e já define uma variavel httpService para ser utilizada no futuro
@@ -157,6 +164,8 @@ export class MoodleService {
         const quizzes = response.data.quizzes || [];
         const questionarios: any[] = [];
 
+        console.log(`[Questionarios] userid=${userid} quizzes=${quizzes.length}`);
+
         for (const quiz of quizzes) {
             let respondido = false;
             let nota = null;
@@ -175,12 +184,18 @@ export class MoodleService {
                     })
                 );
 
+                console.log(`[Quiz ${quiz.id}] Userid: ${userid}`);
+                console.log(`[Quiz ${quiz.id}] Tentativas Response:`, attemptsResponse.data);
+
                 const attempts = attemptsResponse.data.attempts || [];
                 respondido = attempts.length > 0;
+
+                console.log(`[Quiz ${quiz.id}] Respondido:`, respondido);
 
                 // Se respondido, busca a nota
                 if (respondido) {
                     try {
+                        console.log(`[Quiz ${quiz.id}] Buscando nota...`);
                         const gradeResponse = await firstValueFrom(
                             this.httpService.get(`${this.baseUrl}/webservice/rest/server.php`, {
                                 params: {
@@ -193,19 +208,29 @@ export class MoodleService {
                             })
                         );
 
+                        console.log(`[Quiz ${quiz.id}] Nota Response:`, gradeResponse.data);
+
                         // Verifica se tem a chave 'grade' e se é um número válido
                         if (gradeResponse.data && typeof gradeResponse.data.grade === 'number') {
                             nota = gradeResponse.data.grade;
                         } else if (gradeResponse.data && gradeResponse.data.hasgrade) {
                             nota = gradeResponse.data.grade;
                         }
+
+                        console.log(`[Quiz ${quiz.id}] Nota final:`, nota);
                     } catch (gradeError) {
-                        console.error(`Erro ao buscar nota do quiz ${quiz.id}:`, gradeError);
+                        console.error(
+                            `Erro ao buscar nota do quiz ${quiz.id}:`,
+                            this.formatHttpError(gradeError)
+                        );
                         // Continua sem nota se falhar
                     }
                 }
             } catch (error) {
-                console.error(`Erro ao buscar tentativas do quiz ${quiz.id}:`, error);
+                console.error(
+                    `Erro ao buscar tentativas do quiz ${quiz.id}:`,
+                    this.formatHttpError(error)
+                );
                 respondido = false;
             }
 
