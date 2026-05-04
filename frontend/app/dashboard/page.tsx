@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+const API_BASE = '/api'
 
 interface Tarefa {
   id: number
@@ -106,8 +106,11 @@ export default function DashboardPage() {
   const [primeiroNome, setPrimeiroNome] = useState('')
   const [disciplinaFiltro, setDisciplinaFiltro] = useState<string | null>(null)
   const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'tarefa' | 'questionario'>('todos')
-  const [disciplinasDisponiveis, setDisciplinasDisponiveis] = useState<string[]>([])
-  const [darkMode, setDarkMode] = useState(true)
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return true
+    const saved = window.localStorage.getItem('darkMode')
+    return saved === null ? true : saved === 'true'
+  })
   const router = useRouter()
 
   // Cores baseadas no tema
@@ -129,7 +132,7 @@ export default function DashboardPage() {
 
   async function buscarUsuario(token: string) {
     try {
-      const resposta = await fetch(`${API_URL}/moodle/usuario?token=${token}`)
+      const resposta = await fetch(`${API_BASE}/moodle/usuario?token=${encodeURIComponent(token)}`)
       const dados = await resposta.json()
       setPrimeiroNome(dados.primeiroNome)
     } catch {
@@ -139,7 +142,7 @@ export default function DashboardPage() {
 
   async function buscarCursos(token: string) {
     try {
-      const resposta = await fetch(`http://localhost:3000/moodle/cursos?token=${token}`)
+      const resposta = await fetch(`${API_BASE}/moodle/cursos?token=${encodeURIComponent(token)}`)
       const dados = await resposta.json()
       setNomeCursos(dados)
     } catch {
@@ -156,8 +159,8 @@ export default function DashboardPage() {
 
     try {
       const url = filtro
-        ? `http://localhost:3000/moodle/tarefas?token=${token}&dataInicio=${filtro}`
-        : `http://localhost:3000/moodle/tarefas?token=${token}`
+        ? `${API_BASE}/moodle/tarefas?token=${encodeURIComponent(token)}&dataInicio=${encodeURIComponent(filtro)}`
+        : `${API_BASE}/moodle/tarefas?token=${encodeURIComponent(token)}`
 
       const resposta = await fetch(url)
       const dados = await resposta.json()
@@ -177,7 +180,7 @@ export default function DashboardPage() {
 
     try {
       console.log('[Questionarios] Buscar para userid:', userid)
-      const resposta = await fetch(`http://localhost:3000/moodle/questionarios?token=${token}&userid=${userid}`)
+      const resposta = await fetch(`${API_BASE}/moodle/questionarios?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(userid)}`)
       const dados = await resposta.json()
       console.log('[Questionarios] Response status:', resposta.status, 'ok:', resposta.ok)
       console.log('[Questionarios] Dados:', dados)
@@ -197,29 +200,26 @@ export default function DashboardPage() {
       router.push('/login')
       return
     }
-    const savedDarkMode = localStorage.getItem('darkMode')
-    if (savedDarkMode !== null) {
-      setDarkMode(savedDarkMode === 'true')
-    }
-
     // Busca usuário primeiro para pegar o userid
-    buscarUsuario(token)
-    buscarCursos(token)
-    buscarTarefas()
+    setTimeout(() => {
+      void buscarUsuario(token)
+      void buscarCursos(token)
+      void buscarTarefas()
+    }, 0)
 
     // Busca questionários com o userid correto
-    fetch(`http://localhost:3000/moodle/usuario?token=${token}`)
+    fetch(`${API_BASE}/moodle/usuario?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
       .then(dados => {
         console.log('Dados do usuário:', dados)
         console.log('Userid:', dados.userid)
-        buscarQuestionarios(dados.userid.toString())
+        void buscarQuestionarios(dados.userid.toString())
       })
       .catch(() => {
         // Se falhar, tenta com userid padrão
       })
 
-    setCarregando(false)
+    setTimeout(() => setCarregando(false), 0)
   }, [])
 
   function handleLogout() {
@@ -251,15 +251,9 @@ export default function DashboardPage() {
   }))
   const todasAtividades: Atividade[] = [...todasTarefas, ...questionariosComNome]
 
-  // Extrai disciplinas únicas
-  useEffect(() => {
-    if (todasAtividades.length > 0) {
-      const disciplinas = new Set(
-        todasAtividades.map(a => getNomeDisciplina(a.disciplina))
-      )
-      setDisciplinasDisponiveis(Array.from(disciplinas).sort())
-    }
-  }, [todasAtividades.length])
+  const disciplinasDisponiveis = Array.from(
+    new Set(todasAtividades.map(a => getNomeDisciplina(a.disciplina)))
+  ).sort()
 
   // Calcula totais
   const totalTarefasPendentes = tarefas?.pendentes.length ?? 0
@@ -589,10 +583,10 @@ export default function DashboardPage() {
 
               {/* Filtro por tipo */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                {['todos', 'tarefa', 'questionario'].map((tipo) => (
+                {(['todos', 'tarefa', 'questionario'] as const).map((tipo) => (
                   <button
                     key={tipo}
-                    onClick={() => setTipoFiltro(tipo as any)}
+                    onClick={() => setTipoFiltro(tipo)}
                     style={{
                       fontSize: '12px',
                       padding: '6px 14px',

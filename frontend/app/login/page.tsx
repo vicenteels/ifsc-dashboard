@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -23,7 +21,7 @@ export default function LoginPage() {
     setErro('')
 
     try {
-      const resposta = await fetch(`${API_URL}/moodle/login`, {
+      const resposta = await fetch('/api/moodle/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
