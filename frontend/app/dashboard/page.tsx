@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
 interface Tarefa {
   id: number
   cmid: number
@@ -127,7 +129,7 @@ export default function DashboardPage() {
 
   async function buscarUsuario(token: string) {
     try {
-      const resposta = await fetch(`http://localhost:3000/moodle/usuario?token=${token}`)
+      const resposta = await fetch(`${API_URL}/moodle/usuario?token=${token}`)
       const dados = await resposta.json()
       setPrimeiroNome(dados.primeiroNome)
     } catch {
