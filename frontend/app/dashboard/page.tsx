@@ -106,6 +106,11 @@ export default function DashboardPage() {
   const [primeiroNome, setPrimeiroNome] = useState('')
   const [disciplinaFiltro, setDisciplinaFiltro] = useState<string | null>(null)
   const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'tarefa' | 'questionario'>('todos')
+  const [mobileView, setMobileView] = useState<'resumo' | 'dashboard'>('dashboard')
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth < 1024
+  })
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === 'undefined') return true
     const saved = window.localStorage.getItem('darkMode')
@@ -129,6 +134,13 @@ export default function DashboardPage() {
     border: '#e0e0e0',
     inputBg: '#f0f0f0',
   }
+
+  useEffect(() => {
+    const updateIsMobile = () => setIsMobile(window.innerWidth < 1024)
+    updateIsMobile()
+    window.addEventListener('resize', updateIsMobile)
+    return () => window.removeEventListener('resize', updateIsMobile)
+  }, [])
 
   async function buscarUsuario(token: string) {
     try {
@@ -348,6 +360,39 @@ export default function DashboardPage() {
           <span style={{ fontSize: '13px', color: cores.textMuted }}>Dashboard</span>
         </div>
 
+        {isMobile && (
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              onClick={() => setMobileView('resumo')}
+              style={{
+                fontSize: '12px',
+                padding: '5px 10px',
+                borderRadius: '6px',
+                background: mobileView === 'resumo' ? '#7F77DD' : '#1a1d27',
+                color: mobileView === 'resumo' ? '#EEEDFE' : cores.textMuted,
+                border: `0.5px solid ${cores.border}`,
+                cursor: 'pointer',
+              }}
+            >
+              Resumo
+            </button>
+            <button
+              onClick={() => setMobileView('dashboard')}
+              style={{
+                fontSize: '12px',
+                padding: '5px 10px',
+                borderRadius: '6px',
+                background: mobileView === 'dashboard' ? '#7F77DD' : '#1a1d27',
+                color: mobileView === 'dashboard' ? '#EEEDFE' : cores.textMuted,
+                border: `0.5px solid ${cores.border}`,
+                cursor: 'pointer',
+              }}
+            >
+              Dashboard
+            </button>
+          </div>
+        )}
+
         {/* Direita do header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Toggle dark/light mode */}
@@ -404,8 +449,9 @@ export default function DashboardPage() {
 
       <div style={{ display: 'flex', flex: 1 }}>
         {/* Sidebar à esquerda */}
-        <div style={{
-          width: '280px', background: cores.bgSecundario, borderRight: `0.5px solid ${cores.border}`,
+        {(!isMobile || mobileView === 'resumo') && (
+          <div style={{
+            width: '280px', background: cores.bgSecundario, borderRight: `0.5px solid ${cores.border}`,
           padding: '24px 16px', overflowY: 'auto', maxHeight: 'calc(100vh - 56px)',
           transition: 'all 0.3s',
         }}>
@@ -524,10 +570,12 @@ export default function DashboardPage() {
               </div>
             </>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Conteúdo principal */}
-        <div style={{ flex: 1, padding: '32px 24px', maxWidth: '720px', margin: '0 auto', transition: 'all 0.3s' }}>
+        {(!isMobile || mobileView === 'dashboard') && (
+          <div style={{ flex: 1, padding: '32px 24px', maxWidth: '720px', margin: '0 auto', transition: 'all 0.3s' }}>
 
           {/* Saudação */}
           {primeiroNome && (
@@ -769,7 +817,8 @@ export default function DashboardPage() {
               })}
             </>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </main>
   )
