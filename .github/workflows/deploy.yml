@@ -13,6 +13,10 @@ env:
   RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
   REGISTRY_NAME: ${{ secrets.REGISTRY_NAME }}
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -20,20 +24,24 @@ jobs:
     steps:
       # 1. Fazer checkout do código
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       # 2. Fazer login no Azure
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          auth-type: SERVICE_PRINCIPAL
 
-      # 3. Fazer login no ACR
+      # 3. Fazer login no ACR usando Docker
       - name: Login to Azure Container Registry
-        run: |
-          az acr login --name ${{ env.REGISTRY_NAME }}
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
       # 4. Build e Push da imagem Backend
       - name: Build and push Backend image
