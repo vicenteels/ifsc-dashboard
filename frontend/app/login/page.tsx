@@ -55,7 +55,7 @@ export default function LoginPage() {
       const dados = await resposta.json().catch(() => null)
 
       if (!resposta.ok || !dados?.token) {
-        setErro('UsuÃ¡rio ou senha incorretos.')
+      setErro('Usuário ou senha incorretos.')
         return
       }
 
@@ -209,7 +209,7 @@ export default function LoginPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div>
             <label style={{ fontSize: '12px', color: textMuted, display: 'block', marginBottom: '6px' }}>
-              UsuÃ¡rio
+              Usuário
             </label>
             <input
               type="text"
@@ -240,7 +240,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               style={{
                 width: '100%',
@@ -300,7 +300,7 @@ export default function LoginPage() {
           </button>
 
           <p style={{ textAlign: 'center', fontSize: '11px', color: textMuted, margin: '8px 0 0' }}>
-            Modo demo usa dados fictÃ­cios para testar a plataforma (sem credenciais do Moodle).
+            Modo demo usa dados fictícios para testar a plataforma (sem credenciais do Moodle).
           </p>
 
           <p style={{ textAlign: 'center', fontSize: '12px', color: textMuted, margin: '4px 0 0' }}>
@@ -319,4 +319,3 @@ export default function LoginPage() {
     </main>
   )
 }
-
