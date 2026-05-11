@@ -356,8 +356,12 @@ export default function DashboardPage() {
             <span style={{ color: '#2d7a2d' }}>IFSc</span>
             <span style={{ color: '#cc2222' }}>ore</span>
           </div>
-          <div style={{ width: '0.5px', height: '28px', background: cores.border, margin: '0 8px' }} />
-          <span style={{ fontSize: '13px', color: cores.textMuted }}>Dashboard</span>
+          {!isMobile && (
+            <>
+              <div style={{ width: '0.5px', height: '28px', background: cores.border, margin: '0 8px' }} />
+              <span style={{ fontSize: '13px', color: cores.textMuted }}>Dashboard</span>
+            </>
+          )}
         </div>
 
         {isMobile && (
@@ -396,39 +400,57 @@ export default function DashboardPage() {
         {/* Direita do header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Toggle dark/light mode */}
-          <button
-            onClick={toggleDarkMode}
-            style={{
-              width: '44px',
-              height: '24px',
-              borderRadius: '12px',
-              background: darkMode ? '#1f4d1f' : '#ffd54f',
-              border: `0.5px solid ${cores.border}`,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '2px',
-              transition: 'all 0.3s',
-            }}
-            title={darkMode ? 'Modo claro' : 'Modo escuro'}
-          >
-            <div style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              background: darkMode ? '#2d7a2d' : '#fbc02d',
-              transition: 'transform 0.3s',
-              transform: darkMode ? 'translateX(0)' : 'translateX(20px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '12px',
-            }}>
+          {isMobile ? (
+            <button
+              onClick={toggleDarkMode}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: '16px',
+                lineHeight: 1,
+              }}
+              title={darkMode ? 'Modo claro' : 'Modo escuro'}
+              aria-label={darkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            >
               {darkMode ? '🌙' : '☀️'}
-            </div>
-          </button>
+            </button>
+          ) : (
+            <button
+              onClick={toggleDarkMode}
+              style={{
+                width: '44px',
+                height: '24px',
+                borderRadius: '12px',
+                background: darkMode ? '#1f4d1f' : '#ffd54f',
+                border: `0.5px solid ${cores.border}`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px',
+                transition: 'all 0.3s',
+              }}
+              title={darkMode ? 'Modo claro' : 'Modo escuro'}
+            >
+              <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: darkMode ? '#2d7a2d' : '#fbc02d',
+                transition: 'transform 0.3s',
+                transform: darkMode ? 'translateX(0)' : 'translateX(20px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+              }}>
+                {darkMode ? '🌙' : '☀️'}
+              </div>
+            </button>
+          )}
 
-          {primeiroNome && (
+          {primeiroNome && !isMobile && (
             <div style={{
               width: '30px', height: '30px', borderRadius: '50%',
               background: '#1f4d1f', display: 'flex', alignItems: 'center',
@@ -437,13 +459,91 @@ export default function DashboardPage() {
               {primeiroNome[0].toUpperCase()}
             </div>
           )}
-          <button onClick={handleLogout} style={{
-            fontSize: '12px', padding: '5px 14px', borderRadius: '6px',
-            background: 'transparent', color: cores.textMuted, border: `0.5px solid ${cores.border}`, cursor: 'pointer',
-            transition: 'all 0.3s',
-          }}>
-            Sair
-          </button>
+          {isMobile ? (
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                lineHeight: 1,
+                color: cores.textMuted,
+              }}
+              title="Sair"
+              aria-label="Sair"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ display: 'block' }}
+              >
+                <path
+                  d="M10 17v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-8a1 1 0 0 0-1 1v2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M15 12H3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M7 8l-4 4 4 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ) : (
+            <button onClick={handleLogout} style={{
+              fontSize: '12px', padding: '5px 14px', borderRadius: '6px',
+              background: 'transparent', color: cores.textMuted, border: `0.5px solid ${cores.border}`, cursor: 'pointer',
+              transition: 'all 0.3s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ display: 'block' }}
+              >
+                <path
+                  d="M10 17v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-8a1 1 0 0 0-1 1v2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M15 12H3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M7 8l-4 4 4 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Sair
+            </button>
+          )}
         </div>
       </header>
 
@@ -451,10 +551,16 @@ export default function DashboardPage() {
         {/* Sidebar à esquerda */}
         {(!isMobile || mobileView === 'resumo') && (
           <div style={{
-            width: '280px', background: cores.bgSecundario, borderRight: `0.5px solid ${cores.border}`,
-          padding: '24px 16px', overflowY: 'auto', maxHeight: 'calc(100vh - 56px)',
-          transition: 'all 0.3s',
-        }}>
+            width: isMobile ? '100%' : '280px',
+            maxWidth: isMobile ? '720px' : undefined,
+            margin: isMobile ? '0 auto' : undefined,
+            background: cores.bgSecundario,
+            borderRight: isMobile ? 'none' : `0.5px solid ${cores.border}`,
+            padding: '24px 16px',
+            overflowY: 'auto',
+            maxHeight: 'calc(100vh - 56px)',
+            transition: 'all 0.3s',
+          }}>
           {!carregando && (
             <>
               {/* Card média questionários */}
