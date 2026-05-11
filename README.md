@@ -8,12 +8,12 @@
 Dashboard que centraliza tarefas e questionários do **Moodle do IFSC** em um único lugar — com filtros, status, médias e visão por disciplina.  
 Projeto **100% funcional em produção na Azure**: https://ifscore.com.br
 
-> Para estudantes do IFSC que querem uma visão rápida de pendências e prazos, e para devs que desejam contribuir com um projeto real em produção.
+> Para estudantes do IFSC que querem uma visão rápida de pendências e prazos.
 
 ## Sumário
 
 - [Características](#características)
-- [Demo e screenshots](#demo-e-screenshots)
+- [Demo](#demo)
 - [Tech stack](#tech-stack)
 - [Arquitetura (visão rápida)](#arquitetura-visão-rápida)
 - [Pré-requisitos](#pré-requisitos)
@@ -43,10 +43,9 @@ Projeto **100% funcional em produção na Azure**: https://ifscore.com.br
 - 📊 **Gráficos interativos** por disciplina
 - 📲 **Experiência mobile** com toggle de visualização
 
-## Demo e screenshots
+## Demo
 
 - Acesse a versão em produção: https://ifscore.com.br
-- Sugestão: adicione capturas em `docs/screenshots/` e referencie aqui (ex.: login, dashboard, filtros, gráficos).
 
 ## Tech stack
 
