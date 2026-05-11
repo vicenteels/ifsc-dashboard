@@ -11,9 +11,34 @@ export default function LoginPage() {
   const [darkMode, setDarkMode] = useState(true)
   const router = useRouter()
 
+  async function handleDemoLogin() {
+    setCarregando(true)
+    setErro('')
+
+    try {
+      const resposta = await fetch('/api/moodle/demo-login', { method: 'POST' })
+      const dados = await resposta.json().catch(() => null)
+
+      if (!resposta.ok || !dados?.token) {
+        setErro('Erro ao ativar o modo demo.')
+        return
+      }
+
+      localStorage.setItem('moodle_token', dados.token)
+      localStorage.setItem('demo_mode', 'true')
+      localStorage.setItem('demo_last_activity', Date.now().toString())
+      localStorage.setItem('darkMode', darkMode ? 'true' : 'false')
+      router.push('/dashboard')
+    } catch {
+      setErro('Erro ao conectar com o servidor.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
   async function handleLogin() {
     if (!username || !password) {
-      setErro('Preencha o usuário e a senha.')
+      setErro('Preencha o usuÃ¡rio e a senha.')
       return
     }
 
@@ -27,17 +52,18 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       })
 
-      const dados = await resposta.json()
+      const dados = await resposta.json().catch(() => null)
 
-      if (!resposta.ok || !dados.token) {
-        setErro('Usuário ou senha incorretos.')
+      if (!resposta.ok || !dados?.token) {
+        setErro('UsuÃ¡rio ou senha incorretos.')
         return
       }
 
       localStorage.setItem('moodle_token', dados.token)
+      localStorage.removeItem('demo_mode')
+      localStorage.removeItem('demo_last_activity')
       localStorage.setItem('darkMode', darkMode ? 'true' : 'false')
       router.push('/dashboard')
-
     } catch {
       setErro('Erro ao conectar com o servidor.')
     } finally {
@@ -53,27 +79,31 @@ export default function LoginPage() {
   const inputBg = darkMode ? '#0f1117' : '#f0f0f0'
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      background: bgColor,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'var(--font-sans)',
-      transition: 'background 0.3s',
-    }}>
-      {/* Header com toggle dark/light */}
-      <div style={{
-        position: 'absolute',
-        top: '16px',
-        right: '32px',
+    <main
+      style={{
+        minHeight: '100vh',
+        background: bgColor,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        gap: '8px',
-      }}>
+        justifyContent: 'center',
+        fontFamily: 'var(--font-sans)',
+        transition: 'background 0.3s',
+      }}
+    >
+      {/* Header com toggle dark/light */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '16px',
+          right: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
         <span style={{ fontSize: '12px', color: textMuted }}>
-          {darkMode ? '🌙' : '☀️'}
+          {darkMode ? 'ðŸŒ™' : 'â˜€ï¸'}
         </span>
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -90,30 +120,42 @@ export default function LoginPage() {
             transition: 'all 0.3s',
           }}
         >
-          <div style={{
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            background: darkMode ? '#2d7a2d' : '#fbc02d',
-            transition: 'transform 0.3s',
-            transform: darkMode ? 'translateX(0)' : 'translateX(20px)',
-          }} />
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              background: darkMode ? '#2d7a2d' : '#fbc02d',
+              transition: 'transform 0.3s',
+              transform: darkMode ? 'translateX(0)' : 'translateX(20px)',
+            }}
+          />
         </button>
       </div>
 
-      <div style={{
-        background: cardBg,
-        borderRadius: '16px',
-        padding: '40px 36px',
-        width: '100%',
-        maxWidth: '380px',
-        border: `0.5px solid ${borderColor}`,
-        boxShadow: darkMode ? '0 4px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)',
-        transition: 'all 0.3s',
-      }}>
-
+      <div
+        style={{
+          background: cardBg,
+          borderRadius: '16px',
+          padding: '40px 36px',
+          width: '100%',
+          maxWidth: '380px',
+          border: `0.5px solid ${borderColor}`,
+          boxShadow: darkMode
+            ? '0 4px 12px rgba(0,0,0,0.3)'
+            : '0 2px 8px rgba(0,0,0,0.1)',
+          transition: 'all 0.3s',
+        }}
+      >
         {/* Logo IFScore */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: '32px',
+          }}
+        >
           {/* Grid logo IFSC */}
           <div style={{ position: 'relative', width: '64px', height: '64px', marginBottom: '12px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px' }}>
@@ -150,7 +192,15 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: '12px', width: '100%', borderTop: `0.5px solid ${borderColor}`, paddingTop: '16px', textAlign: 'center' }}>
+          <div
+            style={{
+              marginTop: '12px',
+              width: '100%',
+              borderTop: `0.5px solid ${borderColor}`,
+              paddingTop: '16px',
+              textAlign: 'center',
+            }}
+          >
             <div style={{ fontSize: '13px', color: textMuted }}>Acesse com suas credenciais do Moodle</div>
           </div>
         </div>
@@ -159,7 +209,7 @@ export default function LoginPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div>
             <label style={{ fontSize: '12px', color: textMuted, display: 'block', marginBottom: '6px' }}>
-              Usuário
+              UsuÃ¡rio
             </label>
             <input
               type="text"
@@ -190,7 +240,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               style={{
                 width: '100%',
@@ -207,9 +257,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {erro && (
-            <p style={{ fontSize: '12px', color: '#E24B4A', margin: 0 }}>{erro}</p>
-          )}
+          {erro && <p style={{ fontSize: '12px', color: '#E24B4A', margin: 0 }}>{erro}</p>}
 
           <button
             onClick={handleLogin}
@@ -231,6 +279,30 @@ export default function LoginPage() {
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
 
+          <button
+            onClick={handleDemoLogin}
+            disabled={carregando}
+            style={{
+              width: '100%',
+              padding: '11px',
+              borderRadius: '8px',
+              background: 'transparent',
+              color: darkMode ? '#FDD835' : '#7c6a00',
+              fontSize: '14px',
+              fontWeight: 600,
+              border: `0.5px solid ${borderColor}`,
+              cursor: carregando ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s',
+              marginTop: '10px',
+            }}
+          >
+            Acessar Demo
+          </button>
+
+          <p style={{ textAlign: 'center', fontSize: '11px', color: textMuted, margin: '8px 0 0' }}>
+            Modo demo usa dados fictÃ­cios para testar a plataforma (sem credenciais do Moodle).
+          </p>
+
           <p style={{ textAlign: 'center', fontSize: '12px', color: textMuted, margin: '4px 0 0' }}>
             Use as mesmas credenciais do{' '}
             <a
@@ -243,8 +315,8 @@ export default function LoginPage() {
             </a>
           </p>
         </div>
-
       </div>
     </main>
   )
 }
+

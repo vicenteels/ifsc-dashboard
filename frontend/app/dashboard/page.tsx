@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const API_BASE = '/api'
+const DEMO_TOKEN = 'demo_token_12345'
+const DEMO_IDLE_TIMEOUT_MS = 30 * 60 * 1000
 
 interface Tarefa {
   id: number
@@ -116,6 +118,11 @@ export default function DashboardPage() {
     const saved = window.localStorage.getItem('darkMode')
     return saved === null ? true : saved === 'true'
   })
+  const [demoMode, setDemoMode] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const token = window.localStorage.getItem('moodle_token')
+    return window.localStorage.getItem('demo_mode') === 'true' && token === DEMO_TOKEN
+  })
   const router = useRouter()
 
   // Cores baseadas no tema
@@ -186,6 +193,69 @@ export default function DashboardPage() {
     }
   }
 
+  async function buscarUsuarioDemo(token: string) {
+    try {
+      const resposta = await fetch(`${API_BASE}/moodle/demo/usuario?token=${encodeURIComponent(token)}`)
+      const dados = await resposta.json()
+      setPrimeiroNome(dados.primeiroNome)
+    } catch {
+      // silencioso
+    }
+  }
+
+  async function buscarCursosDemo(token: string) {
+    try {
+      const resposta = await fetch(`${API_BASE}/moodle/demo/cursos?token=${encodeURIComponent(token)}`)
+      const dados = await resposta.json()
+      setNomeCursos(dados)
+    } catch {
+      // silencioso
+    }
+  }
+
+  async function buscarTarefasDemo(filtro?: string) {
+    const token = localStorage.getItem('moodle_token')
+    if (!token) {
+      router.push('/login')
+      return
+    }
+
+    try {
+      const url = filtro
+        ? `${API_BASE}/moodle/demo/tarefas?token=${encodeURIComponent(token)}&dataInicio=${encodeURIComponent(filtro)}`
+        : `${API_BASE}/moodle/demo/tarefas?token=${encodeURIComponent(token)}`
+
+      const resposta = await fetch(url)
+      const dados = await resposta.json()
+      if (!resposta.ok) {
+        setErro('Erro ao buscar tarefas (demo).')
+        return
+      }
+      setTarefas(dados)
+    } catch {
+      setErro('Erro ao conectar com o servidor.')
+    }
+  }
+
+  async function buscarQuestionariosDemo(userid: string) {
+    const token = localStorage.getItem('moodle_token')
+    if (!token) return
+
+    try {
+      const resposta = await fetch(
+        `${API_BASE}/moodle/demo/questionarios?token=${encodeURIComponent(token)}&userid=${encodeURIComponent(userid)}`
+      )
+      const dados = await resposta.json()
+      if (!resposta.ok) {
+        setErro('Erro ao buscar questionÃ¡rios (demo).')
+        return
+      }
+      setQuestionarios(dados)
+    } catch {
+      // silencioso
+    }
+  }
+
   async function buscarQuestionarios(userid: string) {
     const token = localStorage.getItem('moodle_token')
     if (!token) return
@@ -212,41 +282,96 @@ export default function DashboardPage() {
       router.push('/login')
       return
     }
+
+    const isDemo = localStorage.getItem('demo_mode') === 'true' && token === DEMO_TOKEN
+    setDemoMode(isDemo)
+
     // Busca usuário primeiro para pegar o userid
     setTimeout(() => {
-      void buscarUsuario(token)
-      void buscarCursos(token)
-      void buscarTarefas()
+      if (isDemo) {
+        void buscarUsuarioDemo(token)
+        void buscarCursosDemo(token)
+        void buscarTarefasDemo()
+      } else {
+        void buscarUsuario(token)
+        void buscarCursos(token)
+        void buscarTarefas()
+      }
     }, 0)
 
     // Busca questionários com o userid correto
-    fetch(`${API_BASE}/moodle/usuario?token=${encodeURIComponent(token)}`)
+    const usuarioUrl = isDemo
+      ? `${API_BASE}/moodle/demo/usuario?token=${encodeURIComponent(token)}`
+      : `${API_BASE}/moodle/usuario?token=${encodeURIComponent(token)}`
+
+    fetch(usuarioUrl)
       .then(r => r.json())
       .then(dados => {
-        console.log('Dados do usuário:', dados)
-        console.log('Userid:', dados.userid)
-        void buscarQuestionarios(dados.userid.toString())
+        if (!dados?.userid) return
+        if (isDemo) {
+          void buscarQuestionariosDemo(dados.userid.toString())
+        } else {
+          void buscarQuestionarios(dados.userid.toString())
+        }
       })
       .catch(() => {
-        // Se falhar, tenta com userid padrão
+        // silencioso
       })
 
     setTimeout(() => setCarregando(false), 0)
   }, [])
 
+  // Logout automático no modo demo após 30 min de inatividade
+  useEffect(() => {
+    if (!demoMode) return
+
+    const touch = () => {
+      localStorage.setItem('demo_last_activity', Date.now().toString())
+    }
+
+    touch()
+
+    const events: Array<keyof WindowEventMap> = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart']
+    events.forEach((evt) => window.addEventListener(evt, touch, { passive: true }))
+
+    const interval = window.setInterval(() => {
+      const raw = localStorage.getItem('demo_last_activity')
+      const last = raw ? Number(raw) : NaN
+      const elapsed = Number.isFinite(last) ? Date.now() - last : 0
+      if (elapsed >= DEMO_IDLE_TIMEOUT_MS) {
+        handleLogout()
+      }
+    }, 15_000)
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, touch as any))
+      window.clearInterval(interval)
+    }
+  }, [demoMode])
+
   function handleLogout() {
     localStorage.removeItem('moodle_token')
+    localStorage.removeItem('demo_mode')
+    localStorage.removeItem('demo_last_activity')
     router.push('/login')
   }
 
   function handleFiltroData() {
-    buscarTarefas(dataInicio || undefined)
+    if (demoMode) {
+      buscarTarefasDemo(dataInicio || undefined)
+    } else {
+      buscarTarefas(dataInicio || undefined)
+    }
   }
 
   function handleLimparFiltro() {
     setDataInicio('')
     setDisciplinaFiltro(null)
-    buscarTarefas()
+    if (demoMode) {
+      buscarTarefasDemo()
+    } else {
+      buscarTarefas()
+    }
   }
 
   function toggleDarkMode() {
@@ -399,6 +524,20 @@ export default function DashboardPage() {
 
         {/* Direita do header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {demoMode && (
+            <div style={{
+              fontSize: '10px',
+              padding: '3px 8px',
+              borderRadius: '4px',
+              background: '#FDD835',
+              color: '#000',
+              fontWeight: 'bold',
+              marginRight: '4px',
+              letterSpacing: '0.04em',
+            }}>
+              MODO DEMO
+            </div>
+          )}
           {/* Toggle dark/light mode */}
           {isMobile ? (
             <button

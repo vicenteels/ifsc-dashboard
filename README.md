@@ -46,6 +46,10 @@ Projeto **100% funcional em produção na Azure**: https://ifscore.com.br
 ## Demo
 
 - Acesse a versão em produção: https://ifscore.com.br
+- Para testar sem credenciais do Moodle: clique em **Acessar Demo** na tela de login.
+  - Um badge **MODO DEMO** aparece no header do dashboard.
+  - A sessão demo faz logout automático após **30 minutos** de inatividade.
+  - Os dados exibidos (cursos, tarefas e questionários) são **fictícios** e servem apenas para demonstração.
 
 ## Tech stack
 
@@ -232,6 +236,13 @@ Base local: `http://localhost:3000`
 - `GET /moodle/questionarios?token=...&userid=...` — lista questionários + notas/média
 - `GET /moodle/usuario?token=...` — dados do usuário
 - `GET /moodle/cursos?token=...` — cursos do usuário
+
+**Modo demo (sem Moodle)**
+- `POST /moodle/demo-login` — retorna `{ token, message }`
+- `GET /moodle/demo/usuario?token=...` — usuário demo
+- `GET /moodle/demo/cursos?token=...` — cursos demo
+- `GET /moodle/demo/tarefas?token=...&dataInicio=YYYY-MM-DD` — tarefas demo (com filtro opcional)
+- `GET /moodle/demo/questionarios?token=...` — questionários demo
 
 Exemplo de login:
 
