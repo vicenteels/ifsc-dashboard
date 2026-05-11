@@ -103,7 +103,7 @@ export default function LoginPage() {
         }}
       >
         <span style={{ fontSize: '12px', color: textMuted }}>
-          {darkMode ? 'ðŸŒ™' : 'â˜€ï¸'}
+          {darkMode ? '🌙' : '☀️'}
         </span>
         <button
           onClick={() => setDarkMode(!darkMode)}
