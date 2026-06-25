@@ -59,12 +59,7 @@ jobs:
           cd ..
 
       - name: Deploy Backend
-        run: az webapp config container set --name ifsc-backend-app --resource-group ${{ env.RESOURCE_GROUP }} --docker-custom-image-name ${{ env.REGISTRY }}/ifsc-backend:latest --docker-registry-server-url https://${{ env.REGISTRY }} --docker-registry-server-user ${{ secrets.ACR_USERNAME }} --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
+        run: az containerapp update --name ifsc-backend-containerapp --resource-group ${{ env.RESOURCE_GROUP }} --image ${{ env.REGISTRY }}/ifsc-backend:latest
 
       - name: Deploy Frontend
-        run: az webapp config container set --name ifsc-frontend-app --resource-group ${{ env.RESOURCE_GROUP }} --docker-custom-image-name ${{ env.REGISTRY }}/ifsc-frontend:latest --docker-registry-server-url https://${{ env.REGISTRY }} --docker-registry-server-user ${{ secrets.ACR_USERNAME }} --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
-
-      - name: Restart Apps
-        run: |
-          az webapp restart --name ifsc-backend-app --resource-group ${{ env.RESOURCE_GROUP }}
-          az webapp restart --name ifsc-frontend-app --resource-group ${{ env.RESOURCE_GROUP }}
+        run: az containerapp update --name ifsc-frontend-containerapp --resource-group ${{ env.RESOURCE_GROUP }} --image ${{ env.REGISTRY }}/ifsc-frontend:latest

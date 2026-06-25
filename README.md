@@ -69,7 +69,7 @@ Projeto **100% funcional em produção na Azure**: https://ifscore.com.br
 - GitHub Actions (build, push e deploy)
 
 **Hospedagem**
-- Azure App Service (Web Apps) em containers
+- Azure Container Apps em containers
 
 ## Arquitetura (visão rápida)
 
@@ -163,22 +163,22 @@ Resumo do processo usado neste repositório:
 
 1. Build das imagens Docker (backend e frontend)
 2. Push das imagens no **Azure Container Registry (ACR)**
-3. Configuração do container no **Azure App Service** para cada Web App
-4. Restart automático dos apps
+3. Atualização dos Container Apps para cada imagem publicada
+4. Nova revision criada automaticamente após o deploy
 
 **Pré-requisitos**
 - Resource Group
-- ACR configurado (login server / credenciais)
-- 2 Web Apps (ex.: `ifsc-backend-app` e `ifsc-frontend-app`) com suporte a container
+- ACR configurado (login server)
+- 2 Container Apps (ex.: `ifsc-backend-containerapp` e `ifsc-frontend-containerapp`) com suporte a container
 - Secrets no GitHub (ver seção CI/CD)
 
-**Configurações importantes no App Service**
+**Configurações importantes no Container Apps**
 
-Frontend (App Service):
+Frontend (Container App):
 - `API_URL=https://<seu-backend>.azurewebsites.net` (recomendado)
   - alternativa: `NEXT_PUBLIC_API_URL=https://<seu-backend>.azurewebsites.net`
 
-Backend (App Service):
+Backend (Container App):
 - `CORS_ORIGIN=https://<seu-frontend>.azurewebsites.net`
 
 > Referência principal: workflow `./.github/workflows/deploy.yml`.
@@ -192,8 +192,8 @@ Workflow: `./.github/workflows/deploy.yml`
   - autentica na Azure via OIDC (`azure/login`)
   - faz login no ACR
   - build + push das imagens `ifsc-backend:latest` e `ifsc-frontend:latest`
-  - atualiza os containers dos Web Apps
-  - reinicia os apps
+  - atualiza os Container Apps
+  - cria uma nova revision automaticamente
 
 **Secrets necessários**
 - `AZURE_CLIENT_ID`
@@ -202,8 +202,6 @@ Workflow: `./.github/workflows/deploy.yml`
 - `RESOURCE_GROUP`
 - `REGISTRY_NAME`
 - `ACR_LOGIN_SERVER`
-- `ACR_USERNAME`
-- `ACR_PASSWORD`
 
 ## Estrutura de pastas
 
